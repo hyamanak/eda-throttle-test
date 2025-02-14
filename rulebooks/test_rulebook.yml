@@ -1,0 +1,20 @@
+---
+- name: Test Throttle with group_by_attributes
+  hosts: localhost
+  sources:
+    - ansible.eda.file_watch:
+        paths:
+          - /var/lib/aap_eda/test_events
+        recursive: false
+  rules:
+    - name: Process event with throttle
+      condition: event.path is defined
+      actions:
+        - set_fact:
+            filtered_host: "{{ event.path | regex_replace('-dev|-test', '') }}"
+        - throttle:
+            rate: 2
+            group_by_attributes:
+              - "{{ filtered_host }}"
+        - debug:
+            msg: "Processing file: {{ event.path }} in group {{ filtered_host }}"
